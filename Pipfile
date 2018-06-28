@@ -1,0 +1,26 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+pytest = "==3.4.0"
+tox = "*"
+pytest-mock = "*"
+mock = "*"
+funcsigs = "*"
+"flake8" = "*"
+sphinx = "*"
+
+
+[packages]
+
+ansible = "==2.4.3.0"
+
+
+[requires]
+
+python_version = "2.7"

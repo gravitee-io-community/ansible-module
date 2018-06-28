@@ -1,0 +1,70 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "url": "https://manage-api.mycompany.com",
+    "user": "admin",
+    "password": "admin",
+    "state": "started",
+    "visibility": "PUBLIC",
+    "transfer_ownership": {
+      "user": "foo@mycompany.com",
+      "owner_role": "OWNER"
+    },
+    "plans": [
+      {
+        "name": "Keyless Public access",
+        "description": "Keyless Public Access",
+        "validation": "AUTO",
+        "security": "KEY_LESS",
+        "type": "API",
+        "status": "PUBLISHED",
+        "characteristics": [],
+        "paths": {
+          "/": []
+        }
+      }
+    ],
+    "config": {
+      "name": "test",
+      "version": "1.0",
+      "description": "test api description",
+      "contextPath": "/test/api",
+      "endpoint": "https://test.com/test/api",
+      "groups": [],
+      "paths": [
+        "/"
+      ]
+    },
+    "pages": [
+      {
+        "name": "Swagger",
+        "type": "SWAGGER",
+        "published": true,
+        "source": {
+          "type": "http-fetcher",
+          "configuration": {
+            "url": "http://petstore.swagger.io/v2/swagger.json"
+          }
+        },
+        "homepage": false,
+        "configuration": {
+          "tryIt": true
+        }
+      },
+      {
+        "name": "Swagger2",
+        "type": "SWAGGER",
+        "published": true,
+        "source": {
+          "type": "http-fetcher",
+          "configuration": {
+            "url": "http://petstore.swagger.io/v2/swagger.json"
+          }
+        },
+        "homepage": false,
+        "configuration": {
+          "tryIt": true
+        }
+      }
+    ]
+  }
+}

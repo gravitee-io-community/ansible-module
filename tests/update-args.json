@@ -1,0 +1,119 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "url": "https://manage-api.mycompany.com",
+    "user": "admin",
+    "password": "admin",
+    "api_id": "4f30b2d3-9369-4537-b0b2-d39369d537b9",
+    "state": "started",
+    "visibility": "PUBLIC",
+    "transfer_ownership": {
+      "user": "foo@mycompany.com",
+      "owner_role": "OWNER"
+    },
+    "plans": [
+      {
+        "name": "Keyless Public access",
+        "description": "Keyless Public Access",
+        "validation": "AUTO",
+        "security": "KEY_LESS",
+        "type": "API",
+        "status": "PUBLISHED",
+        "characteristics": [],
+        "paths": {
+          "/": []
+        }
+      }
+    ],
+    "config": {
+      "version": "1.0",
+      "description": "test api description",
+      "proxy": {
+        "context_path": "/test/api",
+        "strip_context_path": false,
+        "loggingMode": "NONE",
+        "multiTenant": false,
+        "endpoints": [
+          {
+            "name": "default",
+            "target": "https://test.com/test/api",
+            "weight": 1,
+            "backup": false,
+            "type": "HTTP",
+            "http": {
+              "connectTimeout": 5000,
+              "idleTimeout": 60000,
+              "keepAlive": true,
+              "readTimeout": 10000,
+              "pipelining": false,
+              "maxConcurrentConnections": 100,
+              "useCompression": true,
+              "followRedirects": false
+            }
+          }
+        ],
+        "load_balancing": {
+          "type": "ROUND_ROBIN"
+        },
+        "cors": {
+          "allowOrigin": [
+            "*"
+          ],
+          "allowHeaders": [],
+          "allowMethods": [],
+          "exposeHeaders": [],
+          "maxAge": -1,
+          "allowCredentials": false
+        }
+      },
+      "paths": {
+        "/": []
+      },
+      "visibility": "public",
+      "name": "test",
+      "services": {},
+      "tags": [],
+      "resources": [],
+      "groups": [],
+      "labels": []
+    },
+    "pages": [
+      {
+        "id": "71607eee-350a-4e41-a07e-ee350aee4161",
+        "name": "Swagger1",
+        "type": "SWAGGER",
+        "published": true,
+        "source": {
+          "type": "http-fetcher",
+          "configuration": {
+            "url": "http://petstore.swagger.io/v2/swagger.json"
+          }
+        },
+        "homepage": false,
+        "configuration": {
+          "tryIt": true
+        },
+        "excluded_groups": [
+          "mygroup"
+        ]
+      },
+      {
+        "name": "Swagger2",
+        "type": "SWAGGER",
+        "published": true,
+        "source": {
+          "type": "http-fetcher",
+          "configuration": {
+            "url": "http://petstore.swagger.io/v2/swagger.json"
+          }
+        },
+        "homepage": false,
+        "configuration": {
+          "tryIt": true
+        },
+        "excluded_groups": [
+          "mygroup"
+        ]
+      }
+    ]
+  }
+}

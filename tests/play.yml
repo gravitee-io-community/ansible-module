@@ -1,0 +1,86 @@
+- name: Api management with gravitee gateway ansible module
+  connection: local
+  hosts: localhost
+  vars:
+    url: https://manage-api.mycompany.com
+    user: admin
+    password: admin
+  tasks:
+    - name: "create api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        state: started
+        visibility: PUBLIC
+        transfer_ownership:
+            user: foo@mycompany.com
+            owner_role: OWNER
+        config: "{{ lookup('template', playbook_dir + '/create.json') }}"
+        pages:
+            - "{{ lookup('template', playbook_dir + '/page-swagger.json') }}"
+            - "{{ lookup('template', playbook_dir + '/page-swagger.json') }}"
+        plans:
+            - "{{ lookup('template', playbook_dir + '/plan-keyless.json') }}"
+      register: api_result
+
+    - name: "update api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: started
+        visibility: PUBLIC
+        config: "{{ lookup('template', playbook_dir + '/update.json') }}"
+
+    - name: "update api plans"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: started
+        visibility: PUBLIC
+        plans:
+            - "{{ lookup('template', playbook_dir + '/plan-keyless.json') }}"
+
+    - name: "stop api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: stopped
+
+    - name: "stop api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: stopped
+
+    - name: "start api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: started
+
+    - name: "start api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: started
+
+    - name: "remove api"
+      gravitee_gateway:
+        url: "{{url}}"
+        user: "{{user}}"
+        password: "{{password}}"
+        api_id: "{{api_result.api_id}}"
+        state: absent

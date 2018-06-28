@@ -1,0 +1,9 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "url": "https://manage-api.mycompany.com",
+    "user": "admin",
+    "password": "admin",
+    "state": "absent",
+    "api_id": "24a8f93d-4876-4988-a8f9-3d48769988f6"
+    }
+}

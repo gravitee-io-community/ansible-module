@@ -1,0 +1,15 @@
+{
+  "name": "Swagger",
+  "type": "SWAGGER",
+  "published": true,
+  "source": {
+    "type": "http-fetcher",
+    "configuration": {
+      "url": "http://petstore.swagger.io/v2/swagger.json"
+    }
+  },
+  "homepage": false,
+  "configuration": {
+    "tryIt": true
+  }
+}
