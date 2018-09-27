@@ -1,13 +1,13 @@
 {
   "ANSIBLE_MODULE_ARGS": {
     "url": "https://manage-api.mycompany.com",
-    "user": "admin",
-    "password": "admin",
+    "user": "ansible",
+    "password": "ansiblepwd",
     "state": "started",
     "visibility": "PUBLIC",
     "transfer_ownership": {
       "user": "foo@mycompany.com",
-      "owner_role": "OWNER"
+      "owner_role": "USER"
     },
     "plans": [
       {

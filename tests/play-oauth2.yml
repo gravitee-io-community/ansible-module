@@ -2,20 +2,41 @@
   connection: local
   hosts: localhost
   vars:
-    url: https://manage-api.mycompany.com
-    user: ansible
-    password: ansiblepwd
+    auth_url: https://authserver.mycompany.com/auth/realms/REALMS/protocol/openid-connect/token
+    gravitee_url: https://manage-api.mycompany.com
+    client_id: gravitee-client-id
+    client_pwd: ds-ddsq-4522-ds-dsq
+    oauth2_user: ansible@mycompany
+    oauth2_pwd: "foopwd"
   tasks:
+
+    - name: "Get access token from Auth_server thanks to Password grant type flow"
+      uri:
+         url: "{{auth_url}}"
+         method: POST
+         user: "{{client_id}}"
+         password: "{{client_pwd}}"
+         force_basic_auth: yes
+         body: "password={{oauth2_pwd}}&grant_type=password&username={{oauth2_user}}"
+         headers:
+           Content-type: "application/x-www-form-urlencoded"
+      register: auth_result
+
+    - name: "Exchange Oauth2 access token"
+      gravitee_gateway:
+         url: "{{gravitee_url}}"
+         access_token: "{{auth_result.json.access_token}}"
+      register: exchange_token_result
+
     - name: "create api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         state: started
         visibility: PUBLIC
         transfer_ownership:
             user: foo@mycompany.com
-            owner_role: OWNER
+            owner_role: USER
         config: "{{ lookup('template', playbook_dir + '/create.json') }}"
         pages:
             - "{{ lookup('template', playbook_dir + '/page-swagger.json') }}"
@@ -26,9 +47,8 @@
 
     - name: "update api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: started
         visibility: PUBLIC
@@ -36,9 +56,8 @@
 
     - name: "update api plans"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: started
         visibility: PUBLIC
@@ -47,40 +66,35 @@
 
     - name: "stop api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: stopped
 
     - name: "stop api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: stopped
 
     - name: "start api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: started
 
     - name: "start api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: started
 
     - name: "remove api"
       gravitee_gateway:
-        url: "{{url}}"
-        user: "{{user}}"
-        password: "{{password}}"
+        url: "{{gravitee_url}}"
+        token: "{{exchange_token_result.token}}"
         api_id: "{{api_result.api_id}}"
         state: absent

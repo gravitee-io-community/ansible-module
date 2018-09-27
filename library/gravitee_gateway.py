@@ -25,14 +25,22 @@ options:
         url:
             - Base url for api management serveur
         required: true
+    access_token:
+        description:
+            - For authentication purpose with Oauth2 it allows to exchange access_token delivred by an Auth server for a gravitee Oauth2 user to a gravitee JWT Token
+        required: false  
+    token:
+        description:
+            - Gravitee JWT token to inject for each action in case of Oauth2 authentication strategy
+        required: false                
     user:
         description:
             - For authentication purpose, username used by module for rest api actions
-        required: true
+        required: false
     password:
         description:
             - For authentication purpose, password of the user
-        required: true 
+        required: false 
     api_id:
         description:
             - Id of the API in update context
@@ -149,6 +157,41 @@ EXAMPLES = '''
     password: "{{password}}"
     api_id: "abc123321cba"
     state: absent
+    
+# Oauth2 strategy   
+- name: "Get access token from Auth_server thanks to Password grant type flow"
+  uri:
+     url: "{{auth_url}}"
+     method: POST
+     user: "{{client_id}}"
+     password: "{{client_pwd}}"
+     force_basic_auth: yes
+     body: "password={{oauth2_pwd}}&grant_type=password&username={{oauth2_user}}"
+     headers:
+       Content-type: "application/x-www-form-urlencoded"
+  register: auth_result
+
+- name: "Exchange Oauth2 access token"
+  gravitee_gateway:
+     url: "{{gravitee_url}}"
+     access_token: "{{auth_result.json.access_token}}"
+  register: exchange_token_result
+
+- name: "create api"
+  gravitee_gateway:
+    url: "{{gravitee_url}}"
+    token: "{{exchange_token_result.token}}"
+    state: started
+    visibility: PUBLIC
+    transfer_ownership:
+        user: foo@mycompany.com
+        owner_role: USER
+    config: "{{ lookup('template', playbook_dir + '/create.json') }}"
+    pages:
+        - "{{ lookup('template', playbook_dir + '/page-swagger.json') }}"
+    plans:
+        - "{{ lookup('template', playbook_dir + '/plan-keyless.json') }}"
+  register: api_result     
 '''
 
 RETURN = '''
@@ -177,6 +220,12 @@ class ApiGatewayWrapper(object):
         self.module = module
         self.api_path = '/management'
 
+    def _configure_auth_strategy(self, headers):
+        if self.module.params['token'] is not None:
+            headers['Authorization'] = 'Bearer {}'.format(self.module.params['token'])
+        else:
+            self.module.params['force_basic_auth'] = True
+
     def request(self, endpoint=None, method=None, data=None):
         """
             HTTP Request encapsulation of the Ansible fetch_url method
@@ -201,10 +250,12 @@ class ApiGatewayWrapper(object):
         """
         assert self.module.params.get('url')
         url = self.module.params['url'] + endpoint
-        self.module.params['force_basic_auth'] = True
+
         headers = {
             "Content-Type": 'application/json'
         }
+
+        self._configure_auth_strategy(headers)
 
         response, info = fetch_url(self.module, url, headers=headers, data=self.module.jsonify(data), timeout=10, method=method)
 
@@ -231,6 +282,23 @@ class ApiGatewayWrapper(object):
 
         self.module.result['responses'].append(result)
         return result
+
+
+class AuthenticationWrapper(ApiGatewayWrapper):
+
+    """
+        REST API Authentication Wrapper
+    """
+
+    def __init__(self, module):
+        ApiGatewayWrapper.__init__(self, module)
+        self.token = self.module.params.get('access_token')
+
+    def exchange_token(self):
+        result = self.request('{}/auth/oauth2/exchange?token={}'.format(self.api_path, self.token), 'POST')['response_body']
+        token = result['token']
+        self.module.result['token'] = token
+        return token
 
 
 class PlanWrapper(ApiGatewayWrapper):
@@ -358,7 +426,7 @@ class ApiWrapper(ApiGatewayWrapper):
         self.module.result['changed'] = True
         self.module.result['api_id'] = self.api_id
 
-        if self.transfer_ownership:
+        if self.transfer_ownership['user']:
             self.transfer_owner()
 
         if self.visibility != 'PRIVATE':
@@ -388,7 +456,7 @@ class ApiWrapper(ApiGatewayWrapper):
             self.create_or_update_api_plans()
         if self.pages:
             self.create_or_update_api_pages()
-        if self.transfer_ownership:
+        if self.transfer_ownership['user']:
             self.transfer_owner()
         if self.state == 'started':
             self.start()
@@ -471,14 +539,16 @@ class ApiWrapper(ApiGatewayWrapper):
 
 def run_module():
     ownership_spec = dict(
-        user=dict(required=True),
-        owner_role=dict(required=True)
+        user=dict(required=False),
+        owner_role=dict(required=False)
     )
 
     module_args = dict(
-        url_username=dict(required=True, aliases=['user']),
-        url_password=dict(required=True, aliases=['password'], no_log=True),
-        state=dict(choices=['present', 'absent', 'started', 'stopped'], required=True),
+        url_username=dict(required=False, aliases=['user']),
+        url_password=dict(required=False, aliases=['password'], no_log=True),
+        access_token=dict(required=False, no_log=True),
+        token=dict(required=False, no_log=True),
+        state=dict(choices=['present', 'absent', 'started', 'stopped'], required=False),
         visibility=dict(choices=['PRIVATE', 'PUBLIC'], required=False, default='PRIVATE'),
         config=dict(type='dict', required=False, default=None),
         plans=dict(type='list', required=False, default=None),
@@ -498,12 +568,16 @@ def run_module():
         'changed': False,
         'api_id': '',
         'state': '',
+        'token': '',
         'responses': []
     }
 
     api_wrapper = ApiWrapper(module)
 
-    if (module.params['state'] == 'present' or module.params['state'] == 'started') and module.params['api_id'] is None:
+    if module.params['access_token'] is not None:
+        auth_wrapper = AuthenticationWrapper(module)
+        auth_wrapper.exchange_token()
+    elif (module.params['state'] == 'present' or module.params['state'] == 'started') and module.params['api_id'] is None:
         api_wrapper.create()
     elif module.params['state'] == 'absent':
         api_wrapper.remove()

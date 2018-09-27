@@ -81,14 +81,22 @@ options:
         url:
             - Base url for api management serveur
         required: true
+    access_token:
+        description:
+            - For authentication purpose with Oauth2 it allows to exchange access_token delivred by an Auth server for a gravitee Oauth2 user to a gravitee JWT Token
+        required: false
+    token:
+        description:
+            - Gravitee JWT token to inject for each action in case of Oauth2 authentication strategy
+        required: false
     user:
         description:
             - For authentication purpose, username used by module for rest api actions
-        required: true
+        required: false
     password:
         description:
             - For authentication purpose, password of the user
-        required: true
+        required: false
     api_id:
         description:
             - Id of the API in update context
@@ -207,4 +215,41 @@ Examples :
     state: absent
 ```
 
+With Oauth2:
+```yaml
+# Oauth2 strategy
+- name: "Get access token from Auth_server thanks to Password grant type flow"
+  uri:
+     url: "{{auth_url}}"
+     method: POST
+     user: "{{client_id}}"
+     password: "{{client_pwd}}"
+     force_basic_auth: yes
+     body: "password={{oauth2_pwd}}&grant_type=password&username={{oauth2_user}}"
+     headers:
+       Content-type: "application/x-www-form-urlencoded"
+  register: auth_result
+
+- name: "Exchange Oauth2 access token"
+  gravitee_gateway:
+     url: "{{gravitee_url}}"
+     access_token: "{{auth_result.json.access_token}}"
+  register: exchange_token_result
+
+- name: "create api"
+  gravitee_gateway:
+    url: "{{gravitee_url}}"
+    token: "{{exchange_token_result.token}}"
+    state: started
+    visibility: PUBLIC
+    transfer_ownership:
+        user: foo@mycompany.com
+        owner_role: USER
+    config: "{{ lookup('template', playbook_dir + '/create.json') }}"
+    pages:
+        - "{{ lookup('template', playbook_dir + '/page-swagger.json') }}"
+    plans:
+        - "{{ lookup('template', playbook_dir + '/plan-keyless.json') }}"
+  register: api_result
+```
 
