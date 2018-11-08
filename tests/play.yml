@@ -2,9 +2,9 @@
   connection: local
   hosts: localhost
   vars:
-    url: https://manage-api.mycompany.com
-    user: ansible
-    password: ansiblepwd
+    url: https://manage-api-dev.almerys.com
+    user: admin
+    password: almerysdev1234
   tasks:
     - name: "create api"
       gravitee_gateway:
@@ -14,7 +14,7 @@
         state: started
         visibility: PUBLIC
         transfer_ownership:
-            user: foo@mycompany.com
+            user: admin
             owner_role: OWNER
         config: "{{ lookup('template', playbook_dir + '/create.json') }}"
         pages:

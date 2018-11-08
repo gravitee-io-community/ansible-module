@@ -221,7 +221,7 @@ class ApiGatewayWrapper(object):
         self.api_path = '/management'
 
     def _configure_auth_strategy(self, headers):
-        if self.module.params['token'] is not None:
+        if self.module.params.get('token') is not None:
             headers['Authorization'] = 'Bearer {}'.format(self.module.params['token'])
         else:
             self.module.params['force_basic_auth'] = True
@@ -426,7 +426,7 @@ class ApiWrapper(ApiGatewayWrapper):
         self.module.result['changed'] = True
         self.module.result['api_id'] = self.api_id
 
-        if self.transfer_ownership['user']:
+        if self.transfer_ownership is not None:
             self.transfer_owner()
 
         if self.visibility != 'PRIVATE':
@@ -456,7 +456,7 @@ class ApiWrapper(ApiGatewayWrapper):
             self.create_or_update_api_plans()
         if self.pages:
             self.create_or_update_api_pages()
-        if self.transfer_ownership['user']:
+        if self.transfer_ownership is not None:
             self.transfer_owner()
         if self.state == 'started':
             self.start()
