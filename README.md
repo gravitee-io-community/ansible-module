@@ -85,6 +85,10 @@ options:
         description:
             - For authentication purpose with Oauth2 it allows to exchange access_token delivred by an Auth server for a gravitee Oauth2 user to a gravitee JWT Token
         required: false
+    auth_resource_id:
+        description:
+            - For authentication purpose with Oauth2 it allows to target the configuration oauth2 resource identified by id
+        required: false
     token:
         description:
             - Gravitee JWT token to inject for each action in case of Oauth2 authentication strategy
@@ -233,6 +237,7 @@ With Oauth2:
 - name: "Exchange Oauth2 access token"
   gravitee_gateway:
      url: "{{gravitee_url}}"
+     auth_resource_id: "{{gravitee_api_auth_resource_id}}"
      access_token: "{{auth_result.json.access_token}}"
   register: exchange_token_result
 

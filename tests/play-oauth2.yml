@@ -25,6 +25,7 @@
     - name: "Exchange Oauth2 access token"
       gravitee_gateway:
          url: "{{gravitee_url}}"
+         auth_resource_id: "{{gravitee_auth_resource_id}}"
          access_token: "{{auth_result.json.access_token}}"
       register: exchange_token_result
 

@@ -41,6 +41,10 @@ options:
         description:
             - For authentication purpose, password of the user
         required: false 
+    auth_resource_id: 
+         description:
+            - Oauth2 resource id configured into Gravitee.io APIM
+        required: false     
     api_id:
         description:
             - Id of the API in update context
@@ -174,6 +178,7 @@ EXAMPLES = '''
 - name: "Exchange Oauth2 access token"
   gravitee_gateway:
      url: "{{gravitee_url}}"
+     auth_resource_id: "{{gravitee_auth_resource_id}}"
      access_token: "{{auth_result.json.access_token}}"
   register: exchange_token_result
 
@@ -221,7 +226,7 @@ class ApiGatewayWrapper(object):
         self.api_path = '/management'
 
     def _configure_auth_strategy(self, headers):
-        if self.module.params.get('token') is not None:
+        if self.module.params['token'] is not None:
             headers['Authorization'] = 'Bearer {}'.format(self.module.params['token'])
         else:
             self.module.params['force_basic_auth'] = True
@@ -293,9 +298,10 @@ class AuthenticationWrapper(ApiGatewayWrapper):
     def __init__(self, module):
         ApiGatewayWrapper.__init__(self, module)
         self.token = self.module.params.get('access_token')
+        self.auth_resource_id = self.module.params.get('auth_resource_id')
 
     def exchange_token(self):
-        result = self.request('{}/auth/oauth2/exchange?token={}'.format(self.api_path, self.token), 'POST')['response_body']
+        result = self.request('{}/auth/oauth2/{}/exchange?token={}'.format(self.api_path, self.auth_resource_id, self.token), 'POST')['response_body']
         token = result['token']
         self.module.result['token'] = token
         return token
@@ -426,7 +432,7 @@ class ApiWrapper(ApiGatewayWrapper):
         self.module.result['changed'] = True
         self.module.result['api_id'] = self.api_id
 
-        if self.transfer_ownership is not None:
+        if self.transfer_ownership['user']:
             self.transfer_owner()
 
         if self.visibility != 'PRIVATE':
@@ -456,7 +462,7 @@ class ApiWrapper(ApiGatewayWrapper):
             self.create_or_update_api_plans()
         if self.pages:
             self.create_or_update_api_pages()
-        if self.transfer_ownership is not None:
+        if self.transfer_ownership['user']:
             self.transfer_owner()
         if self.state == 'started':
             self.start()
@@ -497,6 +503,8 @@ class ApiWrapper(ApiGatewayWrapper):
         if len(result) != 1:
             self.module.fail_json(msg="transfer ownership expect only one user or existing user")
         data = {'role': self.transfer_ownership['owner_role'], 'reference': result[0]['reference']}
+        if "id" in result[0]:
+            data['id'] = result[0]['id']
         self.request('{}/apis/{}/members/transfer_ownership'.format(self.api_path, self.api_id), 'POST', data)
         self.module.result['changed'] = True
 
@@ -547,6 +555,7 @@ def run_module():
         url_username=dict(required=False, aliases=['user']),
         url_password=dict(required=False, aliases=['password'], no_log=True),
         access_token=dict(required=False, no_log=True),
+        auth_resource_id=dict(required=False),
         token=dict(required=False, no_log=True),
         state=dict(choices=['present', 'absent', 'started', 'stopped'], required=False),
         visibility=dict(choices=['PRIVATE', 'PUBLIC'], required=False, default='PRIVATE'),
