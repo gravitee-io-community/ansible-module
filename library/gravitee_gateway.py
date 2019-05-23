@@ -41,10 +41,6 @@ options:
         description:
             - For authentication purpose, password of the user
         required: false 
-    auth_resource_id: 
-         description:
-            - Oauth2 resource id configured into Gravitee.io APIM
-        required: false     
     api_id:
         description:
             - Id of the API in update context
@@ -178,7 +174,6 @@ EXAMPLES = '''
 - name: "Exchange Oauth2 access token"
   gravitee_gateway:
      url: "{{gravitee_url}}"
-     auth_resource_id: "{{gravitee_auth_resource_id}}"
      access_token: "{{auth_result.json.access_token}}"
   register: exchange_token_result
 
@@ -438,8 +433,8 @@ class ApiWrapper(ApiGatewayWrapper):
         if self.visibility != 'PRIVATE':
             update_data = result['response_body']
             update_data['visibility'] = self.visibility
-            for x in ['created_at', 'updated_at', 'state', 'owner', 'id']:
-                del update_data[x]
+            for x in ['created_at', 'updated_at', 'state', 'owner', 'id', 'workflow_state']:
+                update_data.pop(x, None)
             self.api_entity = update_data
             self.update_api_entity()
 
