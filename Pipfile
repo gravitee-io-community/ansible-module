@@ -13,7 +13,7 @@ funcsigs = "*"
 sphinx = "*"
 
 [packages]
-ansible = "==2.7.1"
+ansible = "==2.7.17"
 pytest = "*"
 mock = "*"
 pytest-mock = "*"
